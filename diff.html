@@ -5,7 +5,15 @@
 		<script src="diff_match_patch/javascript/diff_match_patch_uncompressed.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			$(document).ready(function(){
-				var socket = new io.Socket(null, {port: 8080, rememberTransport: false});
+				var socket = new io.Socket(null, {port: 8080, url: '129.21.42.194', rememberTransport: false});
+				
+				$(function(){
+					console.log('foo');
+					socket.connect();
+				})
+				
+				
+				var previous_text = get_editable_text();
 				
 				function send_message(json_message)
 				{
@@ -20,10 +28,17 @@
 					{
 						apply_diff(data.diff);
 					}
+					else if(data.opcode == 'connected')
+					{
+						$('#edit_current').val(data.full_text);
+						
+						previous_text = get_editable_text();
+					}
 				});
 				
 				socket.on('connect', function(){
 					console.log('connected');
+					send_message({'opcode': 'connect'});
 				});
 				
 				socket.on('disconnect', function(){ 
@@ -42,14 +57,6 @@
 				socket.on('reconnect_failed', function(){ 
 					console.log("failed to reconnect");
 				});
-				
-				$(function(){
-					console.log('foo');
-					socket.connect();
-				})
-				
-				
-				var previous_text = get_editable_text();
 				
 				function get_editable_text()
 				{
@@ -88,31 +95,32 @@
 					
 					var diff_list = take_diff();
 					console.log(diff_list);				
-					
-					var message = {'opcode': 'diff', 'diff': diff_list};
+					var full_text = get_editable_text();
+					var message = {'opcode': 'diff', 'diff': diff_list, 'full_text': full_text};
 					send_message(message);
 					
 					return false;
 				});
 				
-					/*
-					function apply_patch(patch_list, other)
-					{
-						var dmp = new diff_match_patch();
-
-						var results = dmp.patch_apply(patch_list, other);
-						$('#edit_current').val('');
-						$('#edit_current').val(results[0]);
-						//return results[0];
-					}
-
-					function diff_and_apply()
-					{
-						var diff = take_diff();
-
-						var diff_res = apply_patch(diff, $('#diff').val());
-					}
-					*/
+					
+				function apply_patch(patch_list, other)
+				{
+					var dmp = new diff_match_patch();
+                
+					var results = dmp.patch_apply(patch_list, other);
+					$('#edit_current').val('');
+					$('#edit_current').val(results[0]);
+				}
+				
+				/*
+                
+				function diff_and_apply()
+				{
+					var diff = take_diff();
+                
+					var diff_res = apply_patch(diff, $('#diff').val());
+				}
+				*/
 			});
 		</script>
 	</head>

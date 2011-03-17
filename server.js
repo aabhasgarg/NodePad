@@ -9,6 +9,8 @@ server = http.createServer(function(req, res){
  res.end('<h1>Hello world</h1>'); 
 });
 server.listen(8080);
+
+var full_text = '';
   
 // socket.io 
 var socket = io.listen(server); 
@@ -25,13 +27,21 @@ socket.on('connection', function(client){
 	
 	client.on('connect', function(){
 		//console.log(client_data);
+		console.log('client connected');
 	});
 	
   	client.on('message', function(recv_message){
 		
 		if(recv_message.opcode == 'diff')
 		{
+			console.log('diff received');
 			send_to_peers(recv_message);
+			
+			full_text = recv_message.full_text;
+		}
+		else if(recv_message.opcode == 'connect')
+		{
+			client.send({'opcode': 'connected', 'full_text': full_text});
 		}
 		
 	});
