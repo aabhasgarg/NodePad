@@ -1,0 +1,129 @@
+<html>
+	<head>
+		<script src="socket.io-client/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript"></script>
+		<script src="diff_match_patch/javascript/diff_match_patch_uncompressed.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				var socket = new io.Socket(null, {port: 8080, rememberTransport: false});
+				
+				function send_message(json_message)
+				{
+					console.log('sending');
+					console.log(json_message);
+					socket.send(json_message);
+				}
+				
+				socket.on('message', function(data){
+					console.log(data);
+					if(data.opcode == 'diff')
+					{
+						apply_diff(data.diff);
+					}
+				});
+				
+				socket.on('connect', function(){
+					console.log('connected');
+				});
+				
+				socket.on('disconnect', function(){ 
+					console.log("disconnected");
+					
+				});
+
+	      		socket.on('reconnect', function(){ 
+					console.log("reconnected");
+				});
+
+	      		socket.on('reconnecting', function( nextRetry ){ 
+					console.log("reconnecting");
+				});
+
+				socket.on('reconnect_failed', function(){ 
+					console.log("failed to reconnect");
+				});
+				
+				$(function(){
+					console.log('foo');
+					socket.connect();
+				})
+				
+				
+				var previous_text = get_editable_text();
+				
+				function get_editable_text()
+				{
+					return $('#edit_current').val();
+				}
+				
+				function take_diff()
+				{					
+					
+					var current_text = get_editable_text();
+					var dmp = new diff_match_patch();
+					
+					var diff = dmp.diff_main(previous_text, current_text);			
+					
+					if (diff.length > 2) {
+						dmp.diff_cleanupSemantic(diff);
+					}
+					
+					// generate a patch list
+					var patch_list = dmp.patch_make(previous_text, current_text, diff);
+					
+					// set the previous text to the now new text
+					previous_text = current_text;
+					
+					return patch_list;
+				}
+				
+				function apply_diff(diff_list)
+				{
+					var diff_res = apply_patch(diff_list, $('#edit_current').val());
+					
+					previous_text = get_editable_text();
+				}				
+				
+				$('#edit_current').live('keyup', function(ev){
+					
+					var diff_list = take_diff();
+					console.log(diff_list);				
+					
+					var message = {'opcode': 'diff', 'diff': diff_list};
+					send_message(message);
+					
+					return false;
+				});
+				
+					/*
+					function apply_patch(patch_list, other)
+					{
+						var dmp = new diff_match_patch();
+
+						var results = dmp.patch_apply(patch_list, other);
+						$('#edit_current').val('');
+						$('#edit_current').val(results[0]);
+						//return results[0];
+					}
+
+					function diff_and_apply()
+					{
+						var diff = take_diff();
+
+						var diff_res = apply_patch(diff, $('#diff').val());
+					}
+					*/
+			});
+		</script>
+	</head>
+	<body>
+		<form name="diff-form" id="diff-form">
+			<textarea id="edit_current" name="edit_current" rows="20" cols="50"></textarea>
+			
+			<!--<textarea id="diff" name="diff" rows="20" cols="50"></textarea>-->
+			<br>
+			
+		</form>
+		<input type="submit" id="foobar">
+	</body>
+</html>
