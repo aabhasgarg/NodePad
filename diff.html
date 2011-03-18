@@ -10,15 +10,13 @@
 				$(function(){
 					console.log('foo');
 					socket.connect();
-				})
+				});
 				
 				
 				var previous_text = get_editable_text();
 				
 				function send_message(json_message)
 				{
-					console.log('sending');
-					console.log(json_message);
 					socket.send(json_message);
 				}
 				
@@ -30,8 +28,8 @@
 					}
 					else if(data.opcode == 'connected')
 					{
-						$('#edit_current').val(data.full_text);
-						
+						//$('#edit_current').val(data.full_text);
+						$('#current_content').html(data.full_text);
 						previous_text = get_editable_text();
 					}
 				});
@@ -60,7 +58,8 @@
 				
 				function get_editable_text()
 				{
-					return $('#edit_current').val();
+					//return $('#edit_current').val();
+					return $('#current_content').html();
 				}
 				
 				function take_diff()
@@ -86,8 +85,8 @@
 				
 				function apply_diff(diff_list)
 				{
-					var diff_res = apply_patch(diff_list, $('#edit_current').val());
-					
+					//var diff_res = apply_patch(diff_list, $('#edit_current').val());
+					var diff_res = apply_patch(diff_list, $('#current_content').html());
 					previous_text = get_editable_text();
 				}				
 				
@@ -108,9 +107,47 @@
 					var dmp = new diff_match_patch();
                 
 					var results = dmp.patch_apply(patch_list, other);
-					$('#edit_current').val('');
-					$('#edit_current').val(results[0]);
+					//$('#edit_current').val('');
+					//$('#edit_current').val(results[0]);
+					$('#current_content').html('');
+					$('#current_content').html(results[0]);
 				}
+				
+				$('#current_content').live('keyup', function(){
+					var diff_list = take_diff();
+					//console.log(diff_list);				
+					var full_text = get_editable_text();
+					//console.log(full_text.split("\n"));
+					//console.log(full_text);
+					insertNodeAtCursor();
+					var message = {'opcode': 'diff', 'diff': diff_list, 'full_text': full_text};
+					send_message(message);
+					
+					console.log($(this).children());
+					
+					return false;
+				});
+				
+				function insertNodeAtCursor(node) {
+				    var range, html;
+				    if (window.getSelection && window.getSelection().getRangeAt) {
+				        range = window.getSelection().getRangeAt(0);
+						console.log(range);
+				        //range.insertNode(node);
+				    } else if (document.selection && document.selection.createRange) {
+				        range = document.selection.createRange();
+				        html = (node.nodeType == 3) ? node.data : node.outerHTML;
+						console.log(range);
+				        //range.pasteHTML(html);
+				    }
+				}
+				
+				function get_line_count()
+				{
+					
+				}
+				
+				
 				
 				/*
                 
@@ -123,10 +160,20 @@
 				*/
 			});
 		</script>
+		<style type="text/css">
+			#current_content {
+				width: 500px;
+				height: 500px;
+				border: 1px solid #000;
+			}
+		</style>
 	</head>
 	<body>
+		<div id="current_content" contenteditable="true">
+			<div>conten</div>
+		</div>
 		<form name="diff-form" id="diff-form">
-			<textarea id="edit_current" name="edit_current" rows="20" cols="50"></textarea>
+			<!--<textarea id="edit_current" name="edit_current" rows="20" cols="50"></textarea>-->
 			
 			<!--<textarea id="diff" name="diff" rows="20" cols="50"></textarea>-->
 			<br>
