@@ -8,7 +8,6 @@
 				var socket = new io.Socket(null, {port: 8080, url: '129.21.42.194', rememberTransport: false});
 				
 				$(function(){
-					console.log('foo');
 					socket.connect();
 				});
 				
@@ -113,20 +112,97 @@
 					$('#current_content').html(results[0]);
 				}
 				
-				$('#current_content').live('keyup', function(){
-					var diff_list = take_diff();
-					//console.log(diff_list);				
-					var full_text = get_editable_text();
-					//console.log(full_text.split("\n"));
-					//console.log(full_text);
-					insertNodeAtCursor();
-					var message = {'opcode': 'diff', 'diff': diff_list, 'full_text': full_text};
-					send_message(message);
+				var setCaretPosition = function(elem, caretPos) {
+				      //var elem = document.getElementById(elemId);
+
+				      if(elem != null) {
+				          if(document.createRange) {
+							  console.log('create range')
+				              var range = document.createRange();
+							console.log(elem);
+				              range.setStart(elem, 0);
+				              range.setEnd(elem, 0);
+				              //range.move('character', caretPos);
+				              //range.select();
+				              console.log("change caret");
+				          }
+				          else {
+							
+				              if(elem.selectionStart) {
+									console.log('selection start');
+				                  elem.focus();
+				                  elem.setSelectionRange(caretPos, caretPos);
+				              }
+				              else
+								console.log('focus');
+				                  elem.focus();
+				          }
+				      }
+					else
+					{
+						console.log('null');
+					}
+				  };
+				
+				$('#current_content').live('keydown', function(e){
 					
-					console.log($(this).children());
+					if (e.which == 13) 
+					{
+						//console.log('enter');
+						if(e.preventDefault)
+						{
+							//console.log('prevent');
+							e.preventDefault();
+						}
+						$(this).append('<div></div>');
+						
+						var selObj = window.getSelection();
+						var selParent = (selObj.anchorNode && selObj.anchorNode.parentNode);
+						console.log($(selParent).next());
+						setCaretPosition($(selParent).next()[0], 1);				
+						
+						/*var new_div = document.getElementById('bar');
+						
+						var range = document.createRange();
+						range.setStart(new_div, 0);
+						range.setEnd(new_div, 0);*/
+						
+					}
+				});
+				
+				$('#current_content').live('keyup', function(e){
+					
+						var diff_list = take_diff();
+						//console.log(diff_list);				
+						var full_text = get_editable_text();
+						//console.log(full_text.split("\n"));
+						//console.log(full_text);
+						//insertNodeAtCursor();
+						var message = {'opcode': 'diff', 'diff': diff_list, 'full_text': full_text};
+						send_message(message);
+						
+						//console.log($(this).children());
+						//console.log('checking line');
+						//check_line();
 					
 					return false;
 				});
+				
+				function check_line()
+				{
+					var range, html;
+				 	if (window.getSelection && window.getSelection().getRangeAt) {
+				 	    range = window.getSelection().getRangeAt(0);
+				 		console.log(range);
+						//console.log($('#current_content').children());
+				 	    //range.insertNode(node);
+				 	} /*else if (document.selection && document.selection.createRange) {
+				 	    range = document.selection.createRange();
+				 	    html = (node.nodeType == 3) ? node.data : node.outerHTML;
+				 		console.log(range);
+				 	    //range.pasteHTML(html);
+				 	}*/
+				}
 				
 				function insertNodeAtCursor(node) {
 				    var range, html;
@@ -169,9 +245,7 @@
 		</style>
 	</head>
 	<body>
-		<div id="current_content" contenteditable="true">
-			<div>conten</div>
-		</div>
+		<div id="current_content" contenteditable="true"><div id="foo">this is cool</div></div>
 		<form name="diff-form" id="diff-form">
 			<!--<textarea id="edit_current" name="edit_current" rows="20" cols="50"></textarea>-->
 			
