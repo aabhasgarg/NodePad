@@ -1,0 +1,81 @@
+<html>
+	<head>
+		<script src="socket.io-client/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript"></script>
+		<script src="diff_match_patch/javascript/diff_match_patch_uncompressed.js" type="text/javascript"></script>
+		<script src="a-tools-jquery.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				
+				$('#current_content').live('keydown', function(e){
+					
+					if (e.which == 13) 
+					{
+						
+						//console.log('enter');
+						if(e.preventDefault)
+						{
+							//console.log('prevent');
+							e.preventDefault();
+						}
+						var new_div = $('<div class="line"></div>');
+						$(this).append(new_div);
+						
+						ctrl = document.getElementById('current_content');
+						pos = ctrl.innerHTML.length;
+						if(ctrl.setSelectionRange)
+						{
+						    ctrl.focus();
+						    ctrl.setSelectionRange(pos,pos);
+						}
+						else if (ctrl.createTextRange) {
+						    var range = ctrl.createTextRange();
+						    range.collapse(true);
+						    range.moveEnd(new_div.get(), pos);
+						    range.moveStart(new_div.get(), pos);
+						    range.select();
+						}
+						
+						// Set caret position (1 = beginning, -1 = end)
+					   	
+						
+						/*var selObj = window.getSelection();
+						var selParent = (selObj.anchorNode && selObj.anchorNode.parentNode);
+						console.log($(selParent).next());
+						setCaretPosition($(selParent).next()[0], 1);				
+						
+						/*var new_div = document.getElementById('bar');
+						
+						var range = document.createRange();
+						range.setStart(new_div, 0);
+						range.setEnd(new_div, 0);*/
+						
+					}
+				});
+				
+				$('#current_content').live('keyup', function(){
+					
+				});
+				
+				
+				
+			});
+		</script>
+		<style type="text/css">
+			#current_content {
+				width: 500px;
+				height: 500px;
+				border: 1px solid #000;
+			}
+			
+			.line {
+				height: 50px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="current_content" contenteditable="true">
+
+		</div>
+	</body>
+</html>
